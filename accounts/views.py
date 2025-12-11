@@ -1,4 +1,3 @@
-# accounts/views.py - CLEAN API-ONLY VERSION
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
@@ -9,9 +8,6 @@ from .serializers import UserRegistrationSerializer, UserProfileSerializer, User
 
 
 class RegisterView(APIView):
-    """
-    Register a new user and return JWT tokens
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -33,9 +29,6 @@ class RegisterView(APIView):
 
 
 class LoginView(APIView):
-    """
-    Login user and return JWT tokens
-    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -58,19 +51,14 @@ class LoginView(APIView):
 
 
 class ProfileView(APIView):
-    """
-    Get or update user profile
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """Get user profile"""
         profile = request.user.profile
         serializer = UserProfileSerializer(profile)
         return Response(serializer.data)
 
     def put(self, request):
-        """Update user profile"""
         profile = request.user.profile
         serializer = UserProfileSerializer(profile, data=request.data, partial=True)
         if serializer.is_valid():
@@ -80,9 +68,6 @@ class ProfileView(APIView):
 
 
 class LogoutView(APIView):
-    """
-    Logout user by blacklisting refresh token
-    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):

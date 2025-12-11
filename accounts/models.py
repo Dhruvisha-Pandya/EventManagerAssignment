@@ -15,5 +15,4 @@ class UserProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profiles/', null=True, blank=True)
 
     def __str__(self):
-        # helpful for admin list display
         return f"{self.user.username} - {self.full_name or 'No name'}"
