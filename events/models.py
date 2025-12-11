@@ -4,9 +4,7 @@ from django.db import models
 User = settings.AUTH_USER_MODEL
 
 class Event(models.Model):
-    """
-    Event model with invited M2M to control access to private events.
-    """
+   
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     organizer = models.ForeignKey(User, related_name='organized_events', on_delete=models.CASCADE)
