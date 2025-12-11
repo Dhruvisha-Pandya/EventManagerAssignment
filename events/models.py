@@ -28,10 +28,6 @@ class Event(models.Model):
             raise ValidationError("end_time must be after start_time")
 
 class RSVP(models.Model):
-    """
-    RSVP model representing a user's RSVP status for an event.
-    Unique constraint prevents multiple RSVPs by same user for same event.
-    """
     STATUS_GOING = 'Going'
     STATUS_MAYBE = 'Maybe'
     STATUS_NOT_GOING = 'Not Going'

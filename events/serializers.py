@@ -1,4 +1,3 @@
-# events/serializers.py
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import Event, RSVP, Review
@@ -7,11 +6,6 @@ from accounts.serializers import UserSerializer
 User = get_user_model()
 
 class EventSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Event.
-    - organizer is set automatically from request.user when creating (HiddenField).
-    - invited accepts list of user ids.
-    """
     organizer = UserSerializer(read_only=True)
     invited = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), many=True, required=False)
 
@@ -25,9 +19,6 @@ class EventSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "created_at", "updated_at", "organizer")
 
     def validate(self, attrs):
-        """
-        Ensure start_time < end_time.
-        """
         start = attrs.get("start_time", getattr(self.instance, "start_time", None))
         end = attrs.get("end_time", getattr(self.instance, "end_time", None))
         if start and end and end <= start:
@@ -35,10 +26,7 @@ class EventSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # invited may be present; pop it then set M2M after instance creation
         invited = validated_data.pop("invited", [])
-        # organizer: expect the view to set `request.user` as organizer via perform_create,
-        # but if not, we can pull from context
         request = self.context.get("request", None)
         if request and request.user and not request.user.is_anonymous:
             validated_data["organizer"] = request.user
@@ -48,7 +36,6 @@ class EventSerializer(serializers.ModelSerializer):
         return event
 
     def update(self, instance, validated_data):
-        # handle invited M2M properly
         invited = validated_data.pop("invited", None)
         instance = super().update(instance, validated_data)
         if invited is not None:
@@ -56,13 +43,6 @@ class EventSerializer(serializers.ModelSerializer):
         return instance
 
 class RSVPSerializer(serializers.ModelSerializer):
-    """
-    Serializer for RSVP.
-    - user default is current user (HiddenField)
-    - event is required (but for nested endpoints you might set it in view)
-    - validate that a user can't create a duplicate RSVP (unique constraint)
-    - validate that private events can only be RSVP'd by invited users or organizer
-    """
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -118,13 +98,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         if event is None:
             raise serializers.ValidationError({"event": "Event must be provided."})
 
-        # Prevent duplicate reviews on create
         if self.instance is None:
             if Review.objects.filter(event=event, user=user).exists():
                 raise serializers.ValidationError({"detail": "You have already reviewed this event."})
         else:
             
-            # Updating — ensure only review owner or event organizer can update
+            #  only review owner or event organizer can update
             if self.instance.user != user and request.user != event.organizer:
                 raise serializers.ValidationError({"detail": "You cannot modify someone else's review."})
         return attrs
